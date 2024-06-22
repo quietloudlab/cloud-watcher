@@ -1,24 +1,42 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState } from 'react';
+import styled from 'styled-components';
+import VideoPlayer from './components/VideoPlayer';
+import CloudTrackingOverlay from './components/CloudTrackingOverlay';
+
+const AppContainer = styled.div`
+  text-align: center;
+  padding: 20px;
+`;
+
+const VideoWrapper = styled.div`
+  position: relative;
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+`;
 
 function App() {
+  const [videoUrl, setVideoUrl] = useState('');
+  const [cloudSections, setCloudSections] = useState([]);
+
+  const handleFileUpload = (event) => {
+    const file = event.target.files[0];
+    setVideoUrl(URL.createObjectURL(file));
+    // For now, let's add a dummy cloud section
+    setCloudSections([{ x: 20, y: 20, width: 30, height: 30 }]);
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <AppContainer>
+      <h1>Cloud Watcher</h1>
+      <input type="file" accept="video/*" onChange={handleFileUpload} />
+      {videoUrl && (
+        <VideoWrapper>
+          <VideoPlayer videoUrl={videoUrl} />
+          <CloudTrackingOverlay cloudSections={cloudSections} />
+        </VideoWrapper>
+      )}
+    </AppContainer>
   );
 }
 
