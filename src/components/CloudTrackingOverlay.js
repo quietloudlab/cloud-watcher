@@ -15,6 +15,7 @@ const CloudSection = styled.div`
   border: 2px solid red;
   border-radius: 50%;
   opacity: 0.7;
+  z-index: 999;
 `;
 
 const CloudTrackingOverlay = ({ cloudSections }) => {
