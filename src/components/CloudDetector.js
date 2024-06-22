@@ -22,9 +22,10 @@ const CloudDetector = ({ videoRef, onCloudDetected }) => {
     if (!videoRef.current || !context) return;
 
     const detectClouds = () => {
-      const video = videoRef.current;
-      const canvas = canvasRef.current;
+      const video = videoRef.current.getInternalPlayer();
+      if (!video || video.readyState < 2) return; // Check if video is ready
 
+      const canvas = canvasRef.current;
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
 

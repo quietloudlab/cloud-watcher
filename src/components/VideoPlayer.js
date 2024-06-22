@@ -16,19 +16,24 @@ const StyledReactPlayer = styled(ReactPlayer)`
 `;
 
 const VideoPlayer = forwardRef(({ videoUrl }, ref) => {
-    return (
-      <VideoContainer>
-        <StyledReactPlayer
-          ref={ref}
-          url={videoUrl}
-          width="100%"
-          height="100%"
-          playing={true}
-          controls={true}
-          loop={true}
-        />
-      </VideoContainer>
-    );
-  });
-  
-  export default VideoPlayer;
+  return (
+    <VideoContainer>
+      <StyledReactPlayer
+        ref={ref}
+        url={videoUrl}
+        width="100%"
+        height="100%"
+        playing={true}
+        controls={true}
+        loop={true}
+        config={{ file: { 
+          attributes: {
+            crossOrigin: "anonymous"
+          }
+        }}}
+      />
+    </VideoContainer>
+  );
+});
+
+export default VideoPlayer;

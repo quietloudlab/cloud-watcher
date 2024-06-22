@@ -4,7 +4,6 @@ import VideoPlayer from './components/VideoPlayer';
 import CloudTrackingOverlay from './components/CloudTrackingOverlay';
 import CloudDetector from './components/CloudDetector';
 
-
 const AppContainer = styled.div`
   text-align: center;
   padding: 20px;
