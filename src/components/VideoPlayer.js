@@ -7,6 +7,7 @@ const VideoContainer = styled.div`
   width: 100%;
   max-width: 800px;
   margin: 0 auto;
+  aspect-ratio: 16 / 9;
 `;
 
 const StyledReactPlayer = styled(ReactPlayer)`

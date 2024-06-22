@@ -5,6 +5,7 @@ const Canvas = styled.canvas`
   position: absolute;
   top: 0;
   left: 0;
+  pointer-events: none;
 `;
 
 const CloudDetector = ({ videoRef, onCloudDetected }) => {
@@ -23,7 +24,7 @@ const CloudDetector = ({ videoRef, onCloudDetected }) => {
 
     const detectClouds = () => {
       const video = videoRef.current.getInternalPlayer();
-      if (!video || video.readyState < 2) return; // Check if video is ready
+      if (!video || video.readyState < 2) return;
 
       const canvas = canvasRef.current;
       canvas.width = video.videoWidth;
@@ -35,19 +36,20 @@ const CloudDetector = ({ videoRef, onCloudDetected }) => {
 
       let cloudSections = [];
 
-      // Simple thresholding for white/bright areas
-      for (let i = 0; i < data.length; i += 4) {
-        if (data[i] > 200 && data[i + 1] > 200 && data[i + 2] > 200) {
-          const x = (i / 4) % canvas.width;
-          const y = Math.floor((i / 4) / canvas.width);
-          cloudSections.push({ x, y, width: 5, height: 5 });
+      // Simplified cloud detection (adjust thresholds as needed)
+      for (let y = 0; y < canvas.height; y += 10) {
+        for (let x = 0; x < canvas.width; x += 10) {
+          const i = (y * canvas.width + x) * 4;
+          if (data[i] > 200 && data[i + 1] > 200 && data[i + 2] > 200) {
+            cloudSections.push({ x: x / canvas.width * 100, y: y / canvas.height * 100, width: 5, height: 5 });
+          }
         }
       }
 
-      // Merge nearby sections (simplified)
+      // Merge nearby sections
       const mergedSections = cloudSections.reduce((acc, section) => {
         const existing = acc.find(s => 
-          Math.abs(s.x - section.x) < 20 && Math.abs(s.y - section.y) < 20
+          Math.abs(s.x - section.x) < 10 && Math.abs(s.y - section.y) < 10
         );
         if (existing) {
           existing.width = Math.max(existing.width, section.x - existing.x + 5);
@@ -58,10 +60,10 @@ const CloudDetector = ({ videoRef, onCloudDetected }) => {
         return acc;
       }, []);
 
-      onCloudDetected(mergedSections.slice(0, 3)); // Limit to 3 sections for simplicity
+      onCloudDetected(mergedSections.slice(0, 3));
     };
 
-    const intervalId = setInterval(detectClouds, 1000); // Detect every second
+    const intervalId = setInterval(detectClouds, 100); // Increased frequency
 
     return () => clearInterval(intervalId);
   }, [videoRef, context, onCloudDetected]);
