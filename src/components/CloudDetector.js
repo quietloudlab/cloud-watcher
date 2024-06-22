@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import styled from 'styled-components';
+import CloudModel from '../utils/cloudModel';
 
 const Canvas = styled.canvas`
   position: absolute;
@@ -8,9 +9,36 @@ const Canvas = styled.canvas`
   pointer-events: none;
 `;
 
-const CloudDetector = ({ videoRef, onCloudDetected }) => {
+const CloudDetector = ({ videoRef, onCloudDetected, trainedAreas }) => {
   const canvasRef = useRef(null);
   const [context, setContext] = useState(null);
+  const [cloudModel, setCloudModel] = useState(null);
+
+  useEffect(() => {
+    const model = new CloudModel();
+    setCloudModel(model);
+  }, []);
+
+  useEffect(() => {
+    if (cloudModel && trainedAreas && trainedAreas.length > 0) {
+      const features = trainedAreas.map(area => [
+        area.x / 100,
+        area.y / 100,
+        area.width / 100,
+        area.height / 100,
+        (area.x + area.width / 2) / 100  // center x
+      ]);
+      const labels = trainedAreas.map(() => [1]);  // All areas are positive examples
+
+      // Add some negative examples
+      for (let i = 0; i < trainedAreas.length; i++) {
+        features.push([Math.random(), Math.random(), 0.1, 0.1, Math.random()]);
+        labels.push([0]);
+      }
+
+      cloudModel.train(features, labels);
+    }
+  }, [cloudModel, trainedAreas]);
 
   useEffect(() => {
     if (canvasRef.current) {
@@ -20,7 +48,7 @@ const CloudDetector = ({ videoRef, onCloudDetected }) => {
   }, []);
 
   useEffect(() => {
-    if (!videoRef.current || !context) return;
+    if (!videoRef.current || !context || !cloudModel) return;
 
     const detectClouds = () => {
       const video = videoRef.current.getInternalPlayer();
@@ -36,37 +64,41 @@ const CloudDetector = ({ videoRef, onCloudDetected }) => {
 
       let cloudSections = [];
 
-      // Simplified cloud detection (adjust thresholds as needed)
       for (let y = 0; y < canvas.height; y += 10) {
         for (let x = 0; x < canvas.width; x += 10) {
           const i = (y * canvas.width + x) * 4;
-          if (data[i] > 200 && data[i + 1] > 200 && data[i + 2] > 200) {
-            cloudSections.push({ x: x / canvas.width * 100, y: y / canvas.height * 100, width: 5, height: 5 });
+          const r = data[i] / 255;
+          const g = data[i + 1] / 255;
+          const b = data[i + 2] / 255;
+          const brightness = (r + g + b) / 3;
+
+          const features = [
+            x / canvas.width,
+            y / canvas.height,
+            0.1,  // width (10 pixels)
+            0.1,  // height (10 pixels)
+            brightness
+          ];
+
+          const prediction = cloudModel.predict(features);
+          if (prediction > 0.5) {
+            cloudSections.push({
+              x: (x / canvas.width) * 100,
+              y: (y / canvas.height) * 100,
+              width: 10,
+              height: 10
+            });
           }
         }
       }
 
-      // Merge nearby sections
-      const mergedSections = cloudSections.reduce((acc, section) => {
-        const existing = acc.find(s => 
-          Math.abs(s.x - section.x) < 10 && Math.abs(s.y - section.y) < 10
-        );
-        if (existing) {
-          existing.width = Math.max(existing.width, section.x - existing.x + 5);
-          existing.height = Math.max(existing.height, section.y - existing.y + 5);
-        } else {
-          acc.push(section);
-        }
-        return acc;
-      }, []);
-
-      onCloudDetected(mergedSections.slice(0, 3));
+      onCloudDetected(cloudSections);
     };
 
-    const intervalId = setInterval(detectClouds, 100); // Increased frequency
+    const intervalId = setInterval(detectClouds, 100);
 
     return () => clearInterval(intervalId);
-  }, [videoRef, context, onCloudDetected]);
+  }, [videoRef, context, cloudModel, onCloudDetected]);
 
   return <Canvas ref={canvasRef} />;
 };
