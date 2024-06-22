@@ -18,12 +18,15 @@ const VideoWrapper = styled.div`
 function App() {
   const [videoUrl, setVideoUrl] = useState('');
   const [cloudSections, setCloudSections] = useState([]);
+  const videoRef = useRef(null);
 
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
     setVideoUrl(URL.createObjectURL(file));
-    // For now, let's add a dummy cloud section
-    setCloudSections([{ x: 20, y: 20, width: 30, height: 30 }]);
+  };
+
+  const handleCloudDetected = (sections) => {
+    setCloudSections(sections);
   };
 
   return (
@@ -32,8 +35,9 @@ function App() {
       <input type="file" accept="video/*" onChange={handleFileUpload} />
       {videoUrl && (
         <VideoWrapper>
-          <VideoPlayer videoUrl={videoUrl} />
+          <VideoPlayer videoUrl={videoUrl} ref={videoRef} />
           <CloudTrackingOverlay cloudSections={cloudSections} />
+          <CloudDetector videoRef={videoRef} onCloudDetected={handleCloudDetected} />
         </VideoWrapper>
       )}
     </AppContainer>

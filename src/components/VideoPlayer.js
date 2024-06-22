@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { forwardRef } from 'react';
 import ReactPlayer from 'react-player';
 import styled from 'styled-components';
 
@@ -15,22 +15,20 @@ const StyledReactPlayer = styled(ReactPlayer)`
   left: 0;
 `;
 
-const VideoPlayer = ({ videoUrl }) => {
-  const [playing, setPlaying] = useState(false);
-
-  return (
-    <VideoContainer>
-      <StyledReactPlayer
-        url={videoUrl}
-        width="100%"
-        height="100%"
-        playing={playing}
-        controls={true}
-        onPlay={() => setPlaying(true)}
-        onPause={() => setPlaying(false)}
-      />
-    </VideoContainer>
-  );
-};
-
-export default VideoPlayer;
+const VideoPlayer = forwardRef(({ videoUrl }, ref) => {
+    return (
+      <VideoContainer>
+        <StyledReactPlayer
+          ref={ref}
+          url={videoUrl}
+          width="100%"
+          height="100%"
+          playing={true}
+          controls={true}
+          loop={true}
+        />
+      </VideoContainer>
+    );
+  });
+  
+  export default VideoPlayer;
